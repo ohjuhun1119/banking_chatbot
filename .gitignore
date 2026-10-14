@@ -1,0 +1,10 @@
+/data/
+/models/
+/logs/
+/results/**/*_errors.csv
+/.venv/
+.env
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
