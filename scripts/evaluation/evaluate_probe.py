@@ -49,7 +49,7 @@ def load_models() -> dict:
                     ids = model(**enc).logits.argmax(-1).tolist()
                 return [model.config.id2label[i] for i in ids]
 
-            models[f"{model.config._name_or_path or d.parent.name} ({d.parent.name})"] = predict
+            models[d.parent.name] = predict
 
     if not models:
         raise FileNotFoundError(f"{MODEL_DIR}에서 학습한 모델을 찾지 못했습니다.")

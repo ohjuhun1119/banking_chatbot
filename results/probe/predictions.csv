@@ -1,4 +1,4 @@
-﻿group,question,expected,TF-IDF + LR,/Users/ojuheon/Projects/banking_chatbot/models/bert/best (bert),/Users/ojuheon/Projects/banking_chatbot/models/kakaobank-kf-deberta-base/best (kakaobank-kf-deberta-base)
+﻿group,question,expected,TF-IDF + LR,bert,kakaobank-kf-deberta-base
 일반 업무 외,비행기는 그렇게 무거운데 어떻게 하늘에 떠 있어?,업무 외,거래내역/잔액조회,업무 외,업무 외
 일반 업무 외,오늘 저녁 메뉴 좀 골라줘,업무 외,업무 외,업무 외,업무 외
 일반 업무 외,고양이가 박스를 좋아하는 이유가 뭐예요?,업무 외,업무 외,업무 외,업무 외
