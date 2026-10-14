@@ -1,17 +1,20 @@
-"""klue/bert-base 파인튜닝과 validation 평가. 베이스라인과 같은 분할·같은 지표로 비교한다.
+"""사전학습 모델 파인튜닝과 validation 평가. 베이스라인과 같은 분할·같은 지표로 비교한다.
 
 - 학습은 train만 사용하고, epoch마다 validation Macro F1로 가장 좋은 시점의 모델을 고른다.
 - test는 사용하지 않는다. (분류기 선정 후 별도로 1회 평가)
 - 먼저 --smoke-test로 짧게 실행해 실행 가능 여부와 본 학습 예상 시간을 확인한다.
 
 실행:
-    python scripts/training/train_bert.py --smoke-test   # 시험 실행 (몇 분)
-    python scripts/training/train_bert.py                # 본 학습
+    python scripts/training/train_bert.py --smoke-test                                   # klue/bert-base 시험 실행
+    python scripts/training/train_bert.py                                                # klue/bert-base 본 학습
+    python scripts/training/train_bert.py --model-name kakaobank/kf-deberta-base         # 금융 특화 모델 본 학습
+    python scripts/training/train_bert.py --model-name kakaobank/kf-deberta-base --device cpu --smoke-test  # CPU 속도 확인
 
-출력:
-    models/bert/best/                      학습된 모델·토크나이저·라벨 매핑
-    results/bert/summary.json              지표·시간·자원 (시험 실행은 summary_smoke.json)
-    results/classifier_comparison.csv      베이스라인과 비교표 (본 학습이고 베이스라인 결과가 있을 때)
+출력 (실행 이름은 모델 이름에서 자동 생성, 예: klue-bert-base, kakaobank-kf-deberta-base):
+    models/<실행 이름>/best/            학습된 모델·토크나이저·라벨 매핑
+    results/<실행 이름>/summary.json    지표·시간·자원 (시험 실행은 summary_smoke.json)
+
+모든 모델을 학습한 뒤 compare_models.py로 비교표를 만든다.
 """
 
 import argparse
@@ -38,6 +41,7 @@ from eval_utils import (LABEL_COL, MODEL_DIR, RESULT_DIR, SEED, TEXT_COL, PeakMe
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--model-name", default="klue/bert-base")
+    parser.add_argument("--run-name", default=None, help="결과 폴더 이름. 기본값은 모델 이름에서 '/'를 '-'로 바꾼 것")
     parser.add_argument("--smoke-test", action="store_true", help="train 1,000건으로 30스텝만 학습")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -47,6 +51,8 @@ def parse_args():
     parser.add_argument("--warmup-ratio", type=float, default=0.1)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--keep-checkpoints", action="store_true", help="학습 중간 저장본을 지우지 않음")
+    parser.add_argument("--device", choices=["auto", "cuda", "mps", "cpu"], default="auto",
+                        help="학습 장치. auto는 cuda → mps → cpu 순서로 자동 선택")
     return parser.parse_args()
 
 
@@ -106,10 +112,11 @@ def predict_labels(model, tokenizer, texts, device, max_length, batch_size=64):
 def main():
     args = parse_args()
     set_seed(SEED)
-    device = get_device()
+    device = get_device() if args.device == "auto" else args.device
     use_fp16 = device == "cuda"
-    out_model = MODEL_DIR / "bert"
-    out_result = RESULT_DIR / "bert"
+    run_name = args.run_name or args.model_name.replace("/", "-")
+    out_model = MODEL_DIR / run_name
+    out_result = RESULT_DIR / run_name
     out_result.mkdir(parents=True, exist_ok=True)
 
     print(f"torch {torch.__version__} / transformers {transformers.__version__} / 장치: {device}")
@@ -169,6 +176,7 @@ def main():
         seed=SEED,
         report_to="none",
         dataloader_num_workers=0,
+        use_cpu=(device == "cpu"),   # Trainer가 장치를 스스로 고르므로 CPU 지정 시 명시
     )
     trainer = Trainer(model=model, args=training_args, train_dataset=train_ds, eval_dataset=val_ds,
                       data_collator=DataCollatorWithPadding(tokenizer), compute_metrics=compute_metrics)
@@ -205,7 +213,7 @@ def main():
     train_config = {"model_name": args.model_name, "max_length": args.max_length, "batch_size": args.batch_size,
                     "learning_rate": args.lr, "epochs": args.epochs, "warmup_ratio": args.warmup_ratio,
                     "warmup_steps": warmup_steps, "weight_decay": args.weight_decay, "fp16": use_fp16,
-                    "seed": SEED, "smoke_test": args.smoke_test,
+                    "seed": SEED, "smoke_test": args.smoke_test, "device": device,
                     "best_checkpoint": trainer.state.best_model_checkpoint}
     save_json(train_config, best_dir / "train_config.json")
     if not args.keep_checkpoints:
@@ -232,6 +240,7 @@ def main():
 
     summary = {
         "model": args.model_name,
+        "run_name": run_name,
         "config": train_config,
         "data": {"train": len(train_part), "validation": len(val_part), "n_labels": len(labels)},
         "validation": val_metrics,
@@ -247,40 +256,9 @@ def main():
     }
     save_json(summary, out_result / ("summary_smoke.json" if args.smoke_test else "summary.json"))
 
-    # 7) 베이스라인과 비교 (본 학습일 때만)
-    base_path = RESULT_DIR / "baseline" / "summary.json"
-    if args.smoke_test:
-        print("\n시험 실행 결과는 일부 데이터 기준이라 비교하지 않습니다. --smoke-test 없이 본 학습을 실행하세요.")
-        return
-    if not base_path.exists():
-        print("\n베이스라인 결과가 없어 비교를 건너뜁니다. train_baseline.py를 먼저 실행하세요.")
-        return
-
-    base = json.loads(base_path.read_text(encoding="utf-8"))
-    base_lat = base["inference_latency_batch1"]
-    base_cpu = base_lat["cpu"]["median_s"] if "cpu" in base_lat else base_lat.get("median_s")
-    rows = [
-        ("validation Macro F1 (11종)", base["validation"]["macro_f1"], val_metrics["macro_f1"]),
-        ("validation Macro F1 (은행 10종)", base["validation"]["macro_f1_bank"], val_metrics["macro_f1_bank"]),
-        ("validation Accuracy", base["validation"]["accuracy"], val_metrics["accuracy"]),
-        ("업무 외 Recall", base["validation"]["oos_recall"], val_metrics["oos_recall"]),
-        ("은행→업무 외 오차단(건)", base["validation"]["bank_blocked_as_oos"], val_metrics["bank_blocked_as_oos"]),
-        ("업무 외→은행 통과(건)", base["validation"]["oos_passed_as_bank"], val_metrics["oos_passed_as_bank"]),
-        ("학습 시간(s)", base["train_time_s"], round(train_s, 1)),
-        ("학습 최대 RAM(MB)", base["peak_ram_mb_train"], mem.peak_mb),
-        ("학습 최대 VRAM(MB)", "-", peak_vram if peak_vram is not None else "-"),
-        ("추론 중앙값 CPU(s)", base_cpu, latency["cpu"]["median_s"]),
-        (f"추론 중앙값 {device.upper()}(s)", "-", latency.get(device, {}).get("median_s", "-")),
-        ("모델 로딩(s)", base["model_load_time_s"], round(load_s, 2)),
-        ("모델 크기(MB)", base["model_size_mb"], model_mb),
-    ]
-    compare = pd.DataFrame(rows, columns=["항목", f"TF-IDF + LR ({base['selected_config']})", args.model_name])
-    compare.to_csv(RESULT_DIR / "classifier_comparison.csv", index=False, encoding="utf-8-sig")
-    print("\n" + compare.to_string(index=False))
-    diff = (val_metrics["macro_f1"] - base["validation"]["macro_f1"]) * 100
-    print(f"\nMacro F1(11종) 차이 ({args.model_name} - 베이스라인): {diff:+.2f}%p")
-    print("선정 규칙: 차이가 1%p 미만이면 건당 추론 시간이 짧은 모델을 선택")
-
+    print(f"\n저장: {out_model / 'best'}, {out_result}")
+    if not args.smoke_test:
+        print("모든 모델 학습이 끝나면 python scripts/training/compare_models.py 로 비교하세요.")
 
 if __name__ == "__main__":
     main()
