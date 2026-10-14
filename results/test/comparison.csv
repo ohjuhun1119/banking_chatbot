@@ -1,0 +1,4 @@
+﻿모델,Macro F1 (11종),Macro F1 (은행 10종),Accuracy,업무 외 Recall,은행→업무 외 오차단,업무 외→은행 통과
+kakaobank-kf-deberta-base,0.7351,0.7086,0.8113,1.0,0,0
+bert,0.7287,0.7017,0.8143,0.998,0,1
+TF-IDF + LogisticRegression,0.7031,0.6739,0.7782,0.99,0,5

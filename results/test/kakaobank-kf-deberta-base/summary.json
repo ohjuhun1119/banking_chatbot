@@ -1,0 +1,66 @@
+{
+  "model": "kakaobank-kf-deberta-base",
+  "test": {
+    "macro_f1": 0.7351,
+    "macro_f1_bank": 0.7086,
+    "accuracy": 0.8113,
+    "oos_recall": 1.0,
+    "bank_blocked_as_oos": 0,
+    "oos_passed_as_bank": 0,
+    "n": 4982,
+    "n_errors": 940,
+    "top_confusions": [
+      {
+        "label": "대출문의(만기/연장/조회등)",
+        "pred": "이자/연체금액",
+        "count": 129
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "대출문의(만기/연장/조회등)",
+        "count": 102
+      },
+      {
+        "label": "자동이체조회",
+        "pred": "이자/연체금액",
+        "count": 52
+      },
+      {
+        "label": "거래내역/잔액조회",
+        "pred": "이자/연체금액",
+        "count": 47
+      },
+      {
+        "label": "자동이체조회",
+        "pred": "거래내역/잔액조회",
+        "count": 40
+      },
+      {
+        "label": "중계요청/착오송금",
+        "pred": "거래내역/잔액조회",
+        "count": 36
+      },
+      {
+        "label": "거래내역/잔액조회",
+        "pred": "자동이체조회",
+        "count": 30
+      },
+      {
+        "label": "만기,연장/해지,수신",
+        "pred": "대출문의(만기/연장/조회등)",
+        "count": 25
+      },
+      {
+        "label": "금융거래한도/비대면한도계좌",
+        "pred": "거래내역/잔액조회",
+        "count": 24
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "자동이체조회",
+        "count": 22
+      }
+    ]
+  },
+  "evaluated_at": "2026-10-14T16:26:50"
+}

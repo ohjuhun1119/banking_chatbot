@@ -1,0 +1,66 @@
+{
+  "model": "TF-IDF + LogisticRegression",
+  "test": {
+    "macro_f1": 0.7031,
+    "macro_f1_bank": 0.6739,
+    "accuracy": 0.7782,
+    "oos_recall": 0.99,
+    "bank_blocked_as_oos": 0,
+    "oos_passed_as_bank": 5,
+    "n": 4982,
+    "n_errors": 1105,
+    "top_confusions": [
+      {
+        "label": "대출문의(만기/연장/조회등)",
+        "pred": "이자/연체금액",
+        "count": 140
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "대출문의(만기/연장/조회등)",
+        "count": 58
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "거래내역/잔액조회",
+        "count": 51
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "자동이체조회",
+        "count": 50
+      },
+      {
+        "label": "거래내역/잔액조회",
+        "pred": "중계요청/착오송금",
+        "count": 45
+      },
+      {
+        "label": "대출문의(만기/연장/조회등)",
+        "pred": "부수거래금리감면",
+        "count": 43
+      },
+      {
+        "label": "대출문의(만기/연장/조회등)",
+        "pred": "만기,연장/해지,수신",
+        "count": 42
+      },
+      {
+        "label": "자동이체조회",
+        "pred": "거래내역/잔액조회",
+        "count": 42
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "부수거래금리감면",
+        "count": 41
+      },
+      {
+        "label": "대출문의(만기/연장/조회등)",
+        "pred": "금융거래한도/비대면한도계좌",
+        "count": 32
+      }
+    ]
+  },
+  "evaluated_at": "2026-10-14T16:24:46"
+}
