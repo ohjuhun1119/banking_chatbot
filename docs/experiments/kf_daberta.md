@@ -13,6 +13,12 @@ klue/bert-base는 베이스라인보다 Macro F1이 2.34%p 높았지만,
 - 모델: kakaobank/kf-deberta-base (MIT 라이선스)
 - klue/bert-base와 같은 분할, 같은 학습 설정 (max_length 128, batch 32, lr 2e-5, 3 epoch)
 - 같은 평가 지표, 특히 대출문의 ↔ 이자/연체금액 오분류 수를 비교
+- 학습 장치: MacBook CPU
+  - MPS(Apple GPU)로 학습 시 DeBERTa의 일부 연산이 MPS를 지원하지 않아 CPU로 전환되며 스텝당 19.5초가 걸렸다.
+  - CPU 전용으로 학습하니 스텝당 2.5초로 약 8배 빨라져 CPU로 학습했다.
+  - klue/bert-base는 MPS로 학습했으므로 **학습 시간은 직접 비교하지 않는다.**
+  - 성능(Macro F1)은 같은 데이터·같은 학습 설정이므로 비교 가능하다.
+  - 추론 시간은 세 모델 모두 같은 맥의 CPU 기준(배치 1 중앙값)으로 비교한다.
 
 ## 결과
 (학습 후 작성)
