@@ -1,0 +1,4 @@
+﻿모델,일반 업무 외,금융 단어 포함 업무 외,은행 업무,전체
+TF-IDF + LR,13/20,9/20,19/20,41/60
+/Users/ojuheon/Projects/banking_chatbot/models/bert/best (bert),19/20,19/20,18/20,56/60
+/Users/ojuheon/Projects/banking_chatbot/models/kakaobank-kf-deberta-base/best (kakaobank-kf-deberta-base),19/20,20/20,19/20,58/60

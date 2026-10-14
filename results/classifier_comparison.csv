@@ -1,14 +1,4 @@
-﻿항목,TF-IDF + LR (char2-4_C1),klue/bert-base
-validation Macro F1 (11종),0.704,0.7274
-validation Macro F1 (은행 10종),0.6747,0.7002
-validation Accuracy,0.7823,0.8144
-업무 외 Recall,0.994,1.0
-은행→업무 외 오차단(건),0,0
-업무 외→은행 통과(건),3,0
-학습 시간(s),7.17,2456.6
-학습 최대 RAM(MB),618.8,1151.0
-학습 최대 VRAM(MB),-,-
-추론 중앙값 CPU(s),0.00018,0.01398
-추론 중앙값 MPS(s),-,0.00774
-모델 로딩(s),0.085,0.07
-모델 크기(MB),7.1,422.8
+﻿모델,Macro F1 (11종),Macro F1 (은행 10종),Accuracy,업무 외 Recall,은행→업무 외 오차단,업무 외→은행 통과,학습 시간(s),학습 최대 RAM(MB),추론 중앙값 CPU(s),추론 중앙값 GPU(s),모델 크기(MB),결과 폴더
+klue/bert-base,0.7274,0.7002,0.8144,1.0,0,0,2456.6,1151.0,0.01398,0.00774,422.8,bert
+kakaobank/kf-deberta-base,0.7243,0.6968,0.8108,1.0,0,0,8463.0,10227.1,0.02848,,712.2,kakaobank-kf-deberta-base
+TF-IDF + LogisticRegression (char2-4_C1),0.704,0.6747,0.7823,0.994,0,3,7.17,618.8,0.00018,,7.1,baseline

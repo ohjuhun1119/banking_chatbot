@@ -1,0 +1,111 @@
+{
+  "model": "kakaobank/kf-deberta-base",
+  "run_name": "kakaobank-kf-deberta-base",
+  "config": {
+    "model_name": "kakaobank/kf-deberta-base",
+    "max_length": 128,
+    "batch_size": 32,
+    "learning_rate": 2e-05,
+    "epochs": 3,
+    "warmup_ratio": 0.1,
+    "warmup_steps": 373,
+    "weight_decay": 0.01,
+    "fp16": false,
+    "seed": 42,
+    "smoke_test": false,
+    "device": "cpu",
+    "best_checkpoint": "/Users/ojuheon/Projects/banking_chatbot/models/kakaobank-kf-deberta-base/checkpoints/checkpoint-3738"
+  },
+  "data": {
+    "train": 39844,
+    "validation": 4983,
+    "n_labels": 11
+  },
+  "validation": {
+    "macro_f1": 0.7243,
+    "macro_f1_bank": 0.6968,
+    "accuracy": 0.8108,
+    "oos_recall": 1.0,
+    "bank_blocked_as_oos": 0,
+    "oos_passed_as_bank": 0,
+    "n": 4983,
+    "n_errors": 943,
+    "top_confusions": [
+      {
+        "label": "대출문의(만기/연장/조회등)",
+        "pred": "이자/연체금액",
+        "count": 128
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "대출문의(만기/연장/조회등)",
+        "count": 104
+      },
+      {
+        "label": "거래내역/잔액조회",
+        "pred": "이자/연체금액",
+        "count": 58
+      },
+      {
+        "label": "자동이체조회",
+        "pred": "거래내역/잔액조회",
+        "count": 45
+      },
+      {
+        "label": "자동이체조회",
+        "pred": "이자/연체금액",
+        "count": 44
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "거래내역/잔액조회",
+        "count": 34
+      },
+      {
+        "label": "중계요청/착오송금",
+        "pred": "거래내역/잔액조회",
+        "count": 30
+      },
+      {
+        "label": "거래내역/잔액조회",
+        "pred": "자동이체조회",
+        "count": 27
+      },
+      {
+        "label": "이자/연체금액",
+        "pred": "자동이체조회",
+        "count": 26
+      },
+      {
+        "label": "거래내역/잔액조회",
+        "pred": "중계요청/착오송금",
+        "count": 22
+      }
+    ]
+  },
+  "train_time_s": 8463.0,
+  "peak_ram_mb_train": 10227.1,
+  "peak_vram_mb_train": null,
+  "inference_latency_batch1": {
+    "cpu": {
+      "n": 200,
+      "mean_s": 0.02915,
+      "median_s": 0.02848,
+      "p95_s": 0.0365
+    }
+  },
+  "model_load_time_s": 0.09,
+  "model_size_mb": 712.2,
+  "reload_prediction_identical_ratio": 1.0,
+  "environment": {
+    "os": "Darwin 25.6.0",
+    "python": "3.12.14",
+    "scikit-learn": "1.9.1",
+    "cpu": "arm",
+    "cpu_count": 10,
+    "ram_gb": 24.0,
+    "torch": "2.14.1",
+    "transformers": "5.19.0",
+    "device": "cpu"
+  }
+}
