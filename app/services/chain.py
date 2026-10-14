@@ -79,6 +79,11 @@ def _cloud_llm():
     common = {"temperature": config.LLM_TEMPERATURE, "max_retries": 1, "timeout": config.LLM_TIMEOUT_S}
     if config.CLOUD_PROVIDER == "openai":
         from langchain_openai import ChatOpenAI
+        if config.CLOUD_REASONING_EFFORT:
+            # 추론 모델: temperature 대신 추론 강도를 지정한다.
+            # 추론에 쓰인 토큰도 최대 출력 길이에 포함되므로, 답변이 잘리지 않게 여유를 둔다.
+            return ChatOpenAI(model=config.CLOUD_MODEL, reasoning_effort=config.CLOUD_REASONING_EFFORT,
+                              max_tokens=config.LLM_MAX_TOKENS * 4, max_retries=1, timeout=config.LLM_TIMEOUT_S)
         return ChatOpenAI(model=config.CLOUD_MODEL, max_tokens=config.LLM_MAX_TOKENS, **common)
     if config.CLOUD_PROVIDER == "anthropic":
         from langchain_anthropic import ChatAnthropic

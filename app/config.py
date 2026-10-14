@@ -57,6 +57,9 @@ OLLAMA_KEEP_ALIVE = os.getenv("OLLAMA_KEEP_ALIVE", "30m")          # 모델을 �
 # 상용 LLM
 CLOUD_PROVIDER = os.getenv("CLOUD_PROVIDER", "openai")             # "openai", "anthropic", "google"
 CLOUD_MODEL = os.getenv("CLOUD_MODEL", "")                         # 제공업체의 정확한 모델 ID
+# 추론(reasoning) 모델의 추론 강도. 예: OpenAI GPT-5 계열 "none" / "low" / "medium".
+# 비워두면 일반 모델처럼 temperature를 사용한다. 추론 모델은 temperature를 지원하지 않을 수 있다.
+CLOUD_REASONING_EFFORT = os.getenv("CLOUD_REASONING_EFFORT", "")
 _DEFAULT_KEY_ENV = {"openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY", "google": "GOOGLE_API_KEY"}
 CLOUD_API_KEY_ENV = os.getenv("CLOUD_API_KEY_ENV", _DEFAULT_KEY_ENV.get(CLOUD_PROVIDER, "OPENAI_API_KEY"))
 
