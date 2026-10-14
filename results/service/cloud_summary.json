@@ -1,0 +1,24 @@
+{
+  "model": "cloud",
+  "health": {
+    "status": "ok",
+    "classifier": {
+      "loaded": true,
+      "model": "BERT (best, mps)",
+      "labels": 11
+    },
+    "llm": {
+      "local": true,
+      "cloud": true
+    }
+  },
+  "scenarios_passed": "7/7",
+  "bank_questions": 20,
+  "bank_blocked": 0,
+  "bank_unclear": 0,
+  "bank_answered": 20,
+  "requests_timed": 40,
+  "total_latency_median_s": 2.668,
+  "total_latency_p95_s": 3.452,
+  "total_latency_max_s": 3.841
+}

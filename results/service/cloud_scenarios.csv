@@ -1,0 +1,8 @@
+﻿시나리오,기대,상태 코드,route,label,통과,응답 시간(s)
+은행 업무 질문,['answered'],200,answered,"만기,연장/해지,수신",True,3.678
+업무 외 (분류기 차단 예상),"['blocked_by_classifier', 'blocked_by_llm']",200,blocked_by_classifier,업무 외,True,0.05
+업무 외 (금융 단어 포함),"['blocked_by_classifier', 'blocked_by_llm']",200,blocked_by_classifier,업무 외,True,0.014
+의도 불명,['unclear'],200,unclear,자동이체조회,True,2.751
+빈 질문,422,422,,,True,0.002
+길이 초과,422,422,,,True,0.001
+허용되지 않은 모델,422,422,,,True,0.001
