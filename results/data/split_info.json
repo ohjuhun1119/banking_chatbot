@@ -1,0 +1,38 @@
+{
+  "seed": 42,
+  "method": "StratifiedGroupKFold (group=source_id), test 1/10 → validation 1/9 of rest",
+  "rows": {
+    "train": 39844,
+    "validation": 4983,
+    "test": 4982
+  },
+  "ratio_%": {
+    "train": 79.99,
+    "validation": 10.0,
+    "test": 10.0
+  },
+  "groups": {
+    "train": 24102,
+    "validation": 3013,
+    "test": 3013
+  },
+  "source_id_overlaps": {
+    "train-validation": 0,
+    "train-test": 0,
+    "validation-test": 0
+  },
+  "n_labels": 11,
+  "labels": [
+    "거래내역/잔액조회",
+    "금융거래한도/비대면한도계좌",
+    "기타(은행)",
+    "대출문의(만기/연장/조회등)",
+    "만기,연장/해지,수신",
+    "부수거래금리감면",
+    "업무 외",
+    "이자/연체금액",
+    "자동이체조회",
+    "중계요청/착오송금",
+    "환전문의"
+  ]
+}
