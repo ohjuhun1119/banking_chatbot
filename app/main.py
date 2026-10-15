@@ -10,12 +10,17 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import config
 from app.classifier import load_classifier
 from app.messages import MESSAGES, match_fixed_message
+from app.privacy import mask_pii
 from app.request_log import write_log
 from app.schemas import (ChatRequest, ChatResponse, ClassifyResponse, HealthResponse, QuestionRequest)
 from app.services import answer as answer_service
@@ -41,6 +46,14 @@ app = FastAPI(title="은행 상담 챗봇 API", version="0.1.0", lifespan=lifesp
               description="질문 분류(은행 업무 10종 + 업무 외) 후 주제별 정책으로 답변을 생성합니다.")
 app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
 
+# 챗봇 화면: 같은 서버에서 제공해 /chat을 같은 주소로 호출한다
+app.mount("/ui", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="ui")
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/ui/")
+
 
 @app.get("/health", response_model=HealthResponse)
 def health():
@@ -62,20 +75,23 @@ def classify(req: QuestionRequest):
         raise HTTPException(status_code=503, detail=f"분류기를 사용할 수 없습니다: {state['classifier_error']}")
     pred = clf.predict(req.question)
     result = {"label": pred.label, "confidence": pred.confidence, "latency_s": {"classify": pred.latency_s}}
-    write_log("/classify", req.question, result)
+    write_log("/classify", mask_pii(req.question)[0], result)   # 기록에는 가린 질문만 남긴다
     return result
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     start = time.perf_counter()
+    # 분류기는 이 서버 안에서만 돌아가 원문을 쓰고, 외부 API로 가는 질문과 실행 기록에는 가린 질문을 쓴다
+    safe_question, masked = mask_pii(req.question)
     result = {"answer": None, "route": None, "label": None, "confidence": None, "model": None,
-              "latency_s": {"classify": None, "generate": None, "total": 0.0}, "error": None}
+              "latency_s": {"classify": None, "generate": None, "total": 0.0}, "error": None,
+              "masked": masked}
 
     def finish(route: str, answer: str, error: str | None = None):
         result.update(route=route, answer=answer, error=error)
         result["latency_s"]["total"] = round(time.perf_counter() - start, 4)
-        write_log("/chat", req.question, result)
+        write_log("/chat", safe_question, result)
         return result
 
     # 1차 분류
@@ -100,7 +116,7 @@ async def chat(req: ChatRequest):
     gen_start = time.perf_counter()
     try:
         answer = await asyncio.wait_for(
-            asyncio.to_thread(answer_service.generate_answer, req.question, pred.label, req.model),
+            asyncio.to_thread(answer_service.generate_answer, safe_question, pred.label, req.model),
             timeout=config.LLM_TIMEOUT_S,
         )
     except asyncio.TimeoutError:

@@ -29,7 +29,11 @@ class FakeClassifier:
         return Prediction("대출문의(만기/연장/조회등)", 0.5, 0.001)
 
 
+SEEN = []   # 가짜 LLM이 실제로 받은 질문
+
+
 def fake_generate(question, label, model):
+    SEEN.append(question)
     if "고장" in question:
         raise RuntimeError("연결 실패")
     if "느림" in question:
@@ -127,3 +131,37 @@ def test_분류기_없으면_error_route(monkeypatch, tmp_path):
 def test_실행_기록_저장(client):
     chat(client, "환전 신청은 어떻게 하나요?")
     assert config.REQUEST_LOG_PATH.exists()
+
+
+def test_챗봇_화면(client):
+    resp = client.get("/", follow_redirects=False)
+    assert resp.status_code in (302, 307) and resp.headers["location"] == "/ui/"
+    page = client.get("/ui/")
+    assert page.status_code == 200 and "은행 문의 안내" in page.text
+
+
+def test_외부로_보내는_질문과_기록에는_개인정보가_가려짐(client):
+    SEEN.clear()
+    raw = "환전 문의예요. 주민번호 900101-1234567, OTP 번호는 123456 입니다"
+    body = chat(client, raw).json()
+    assert body["route"] == "answered"
+    assert "900101" not in SEEN[-1] and "123456" not in SEEN[-1]      # LLM이 받은 질문
+    assert "[주민등록번호]" in SEEN[-1] and "[비밀정보]" in SEEN[-1]
+    log = config.REQUEST_LOG_PATH.read_text(encoding="utf-8")
+    assert "900101" not in log and "123456" not in log                # 실행 기록
+
+
+def test_응답에_가린_개인정보_종류와_개수가_들어감(client):
+    body = chat(client, "환전 문의예요. 주민번호 900101-1234567, OTP 번호는 123456 입니다").json()
+    assert body["masked"] == {"주민등록번호": 1, "비밀정보": 1}
+    assert "900101" not in str(body) and "123456" not in str(body)     # 응답 어디에도 원본이 없음
+
+
+def test_개인정보가_없으면_masked는_비어_있음(client):
+    assert chat(client, "환전 신청은 어떻게 하나요?").json()["masked"] == {}
+
+
+def test_실행_기록에_가린_종류가_남음(client):
+    chat(client, "카드 1234-5678-9012-3456 분실했어요, 환전도 문의해요")
+    log = config.REQUEST_LOG_PATH.read_text(encoding="utf-8")
+    assert "카드번호" in log and "1234-5678" not in log

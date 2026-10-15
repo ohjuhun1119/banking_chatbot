@@ -17,7 +17,7 @@ def write_log(endpoint: str, question: str, result: dict):
         "time": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "endpoint": endpoint,
         "question": question,
-        **{k: result.get(k) for k in ("route", "label", "confidence", "model", "latency_s", "error")},
+        **{k: result.get(k) for k in ("route", "label", "confidence", "model", "latency_s", "error", "masked")},
     }
     try:
         config.REQUEST_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)

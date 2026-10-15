@@ -52,6 +52,7 @@ class ChatResponse(BaseModel):
     model: LLMName | None
     latency_s: ChatLatency
     error: str | None
+    masked: dict[str, int] = Field(default_factory=dict, description="외부로 보내기 전에 가린 개인정보의 종류와 개수 (원문은 포함하지 않음)")
 
 
 class ClassifierStatus(BaseModel):
