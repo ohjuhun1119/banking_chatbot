@@ -103,4 +103,7 @@ def get_chain(model: str):
 
 
 def run_chain(question: str, label: str, model: str) -> str:
-    return get_chain(model).invoke({"question": question, "label": label})
+    answer = get_chain(model).invoke({"question": question, "label": label}).strip()
+    if not answer:
+        raise RuntimeError("생성 모델이 빈 답변을 반환했습니다.")
+    return answer

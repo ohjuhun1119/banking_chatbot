@@ -4,6 +4,10 @@
     uvicorn app.main:app --reload
 문서 화면:
     http://localhost:8000/docs
+챗봇 실행:
+    python -m uvicorn app.main:app --port 8001
+챗봇 화면:
+    http://localhost:8001
 """
 
 import asyncio
@@ -20,7 +24,6 @@ from fastapi.staticfiles import StaticFiles
 from app import config
 from app.classifier import load_classifier
 from app.messages import MESSAGES, match_fixed_message
-from app.privacy import mask_pii
 from app.request_log import write_log
 from app.schemas import (ChatRequest, ChatResponse, ClassifyResponse, HealthResponse, QuestionRequest)
 from app.services import answer as answer_service
@@ -75,23 +78,20 @@ def classify(req: QuestionRequest):
         raise HTTPException(status_code=503, detail=f"분류기를 사용할 수 없습니다: {state['classifier_error']}")
     pred = clf.predict(req.question)
     result = {"label": pred.label, "confidence": pred.confidence, "latency_s": {"classify": pred.latency_s}}
-    write_log("/classify", mask_pii(req.question)[0], result)   # 기록에는 가린 질문만 남긴다
+    write_log("/classify", req.question, result)
     return result
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     start = time.perf_counter()
-    # 분류기는 이 서버 안에서만 돌아가 원문을 쓰고, 외부 API로 가는 질문과 실행 기록에는 가린 질문을 쓴다
-    safe_question, masked = mask_pii(req.question)
     result = {"answer": None, "route": None, "label": None, "confidence": None, "model": None,
-              "latency_s": {"classify": None, "generate": None, "total": 0.0}, "error": None,
-              "masked": masked}
+              "latency_s": {"classify": None, "generate": None, "total": 0.0}, "error": None}
 
     def finish(route: str, answer: str, error: str | None = None):
         result.update(route=route, answer=answer, error=error)
         result["latency_s"]["total"] = round(time.perf_counter() - start, 4)
-        write_log("/chat", safe_question, result)
+        write_log("/chat", req.question, result)
         return result
 
     # 1차 분류
@@ -116,7 +116,7 @@ async def chat(req: ChatRequest):
     gen_start = time.perf_counter()
     try:
         answer = await asyncio.wait_for(
-            asyncio.to_thread(answer_service.generate_answer, safe_question, pred.label, req.model),
+            asyncio.to_thread(answer_service.generate_answer, req.question, pred.label, req.model),
             timeout=config.LLM_TIMEOUT_S,
         )
     except asyncio.TimeoutError:
